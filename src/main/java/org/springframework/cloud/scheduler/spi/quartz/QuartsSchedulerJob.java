@@ -16,32 +16,49 @@
 
 package org.springframework.cloud.scheduler.spi.quartz;
 
-import org.quartz.JobExecutionContext;
+import java.util.List;
+import java.util.Map;
 
+import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
-import org.springframework.cloud.deployer.spi.task.TaskLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.dataflow.server.service.TaskService;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 public class QuartsSchedulerJob extends QuartzJobBean {
 
-    private static final Logger logger = LoggerFactory.getLogger(QuartsSchedulerJob.class);
+	private static final Logger logger = LoggerFactory.getLogger(QuartsSchedulerJob.class);
 
-    private TaskLauncher taskLauncher;
+	private TaskService taskService;
 
-    private AppDeploymentRequest taskRequest;
+	private String taskName;
 
-    public void setTaskLauncher(TaskLauncher taskLauncher) { this.taskLauncher = taskLauncher; }
+	private Map<String, String> taskDeploymentProperties;
 
-    public void setTaskRequest(AppDeploymentRequest taskRequest) { this.taskRequest = taskRequest; }
+	private List<String> commandLineArgs;
 
-    @Override
-    protected void executeInternal(JobExecutionContext jobExecutionContext) {
-        logger.debug("launching scheduled quartz job {}", taskRequest.getDefinition().getName());
+	@Autowired
+	public void setTaskService(TaskService taskService) {
+		this.taskService = taskService;
+	}
 
-        String sd = taskLauncher.launch(taskRequest);
-        logger.debug("App launched ! The status is {}" + taskLauncher.status(sd));
-    }
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
+
+	public void setTaskDeploymentProperties(Map<String, String> taskDeploymentProperties) {
+		this.taskDeploymentProperties = taskDeploymentProperties;
+	}
+
+	public void setCommandLineArgs(List<String> commandLineArgs) {
+		this.commandLineArgs = commandLineArgs;
+	}
+
+	@Override
+	protected void executeInternal(JobExecutionContext jobExecutionContext) {
+		logger.debug("launching scheduled quartz job {}", taskName);
+		taskService.executeTask(taskName, taskDeploymentProperties, commandLineArgs);
+	}
 }

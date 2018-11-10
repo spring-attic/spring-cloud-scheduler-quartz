@@ -33,37 +33,42 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = QuartzSchedulerProperties.QUARTZ_SCHEDULER_PROPERTIES)
 public class QuartzSchedulerProperties {
 
-	/**
-	 * Namespace to use for Quartz Scheduler configuration properties.
-	 */
+	/** Namespace to use for Quartz Scheduler configuration properties. */
 	public static final String QUARTZ_SCHEDULER_PROPERTIES = "spring.cloud.scheduler.quartz";
 
 	/**
-	 * Whether to automatically start the scheduler after initialization.
+	 * Name of the scheduler.
 	 */
+	private String schedulerName;
+
+	/** Whether to automatically start the scheduler after initialization. */
 	private boolean autoStartup = true;
 
 	/**
-	 * Delay in seconds after which the scheduler is started once initialization completes. Setting
-	 * this property makes sense if no jobs should be run before the entire application
-	 * has started up.
+	 * Delay in seconds after which the scheduler is started once initialization completes.
+	 * Setting this property makes sense if no jobs should be run before the entire
+	 * application has started up.
 	 */
 	private int startupDelay = 0;
 
-	/**
-	 * Whether to wait for running jobs to complete on shutdown.
-	 */
+	/** Whether to wait for running jobs to complete on shutdown. */
 	private boolean waitForJobsToCompleteOnShutdown = false;
 
-	/**
-	 * Whether configured jobs should overwrite existing job definitions.
-	 */
+	/** Whether configured jobs should overwrite existing job definitions. */
 	private boolean overwriteExistingJobs = false;
 
-	/**
-	 * Additional Quartz Scheduler properties.
-	 */
+	/** Additional Quartz Scheduler properties. */
 	private final Map<String, String> properties = new HashMap<>();
+
+	private final Jdbc jdbc = new Jdbc();
+
+	public String getSchedulerName() {
+		return this.schedulerName;
+	}
+
+	public void setSchedulerName(String schedulerName) {
+		this.schedulerName = schedulerName;
+	}
 
 	public boolean isAutoStartup() {
 		return this.autoStartup;
@@ -85,8 +90,7 @@ public class QuartzSchedulerProperties {
 		return this.waitForJobsToCompleteOnShutdown;
 	}
 
-	public void setWaitForJobsToCompleteOnShutdown(
-			boolean waitForJobsToCompleteOnShutdown) {
+	public void setWaitForJobsToCompleteOnShutdown(boolean waitForJobsToCompleteOnShutdown) {
 		this.waitForJobsToCompleteOnShutdown = waitForJobsToCompleteOnShutdown;
 	}
 
@@ -102,4 +106,40 @@ public class QuartzSchedulerProperties {
 		return this.properties;
 	}
 
+	public Jdbc getJdbc() {
+		return this.jdbc;
+	}
+
+	public static class Jdbc {
+
+		private static final String DEFAULT_SCHEMA_LOCATION = "classpath:org/quartz/impl/"
+				+ "jdbcjobstore/tables_@@platform@@.sql";
+
+		/**
+		 * Path to the SQL file to use to initialize the database schema.
+		 */
+		private String schema = DEFAULT_SCHEMA_LOCATION;
+
+		/**
+		 * Prefix for single-line comments in SQL initialization scripts.
+		 */
+		private String commentPrefix = "--";
+
+		public String getSchema() {
+			return this.schema;
+		}
+
+		public void setSchema(String schema) {
+			this.schema = schema;
+		}
+
+		public String getCommentPrefix() {
+			return this.commentPrefix;
+		}
+
+		public void setCommentPrefix(String commentPrefix) {
+			this.commentPrefix = commentPrefix;
+		}
+
+	}
 }
